@@ -3,6 +3,7 @@ from manimlib import *
 class SelectingPoints(InteractiveScene):
     def construct(self):
 
+        # Construct X-Y axes
         x_max = 10
         y_max = 0.5
 
@@ -37,10 +38,30 @@ class SelectingPoints(InteractiveScene):
             ShowCreation(val_err_graph),
         )
         self.wait(1)
+    
 
 class ValPoints(InteractiveScene):
-    def construct(self):
 
+    def on_mouse_press(self, point, button, mods):
+        if button == 1:
+            self.go_to_next = True
+        return super().on_mouse_press(point, button, mods)
+    
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        if symbol == 32: # space
+            self.go_to_next = True
+        return super().on_key_press(symbol, modifiers)
+
+    def wait_for_next(self):
+        if self.skip_animations:
+            return
+        self.go_to_next = False
+        self.wait(duration=1000, stop_condition=lambda: self.go_to_next)
+
+    def construct(self):
+        self.go_to_next = False
+
+        # Construct X-Y axes
         x_max = 10
         y_max = 0.5
 
@@ -54,19 +75,32 @@ class ValPoints(InteractiveScene):
         axes.add_coordinate_labels()
 
         self.play(Write(axes, lag_ratio=0.01, run_time=1))
+        self.wait_for_next()
 
         # Show labels
         x_axis_label = Text("Hyperparameter Value", font_size=24)
         x_axis_label.next_to(axes.get_bottom(), DOWN)
         x_axis_label.set_color(GREY_B)
         self.play(FadeIn(x_axis_label))
-        self.wait(1)
+        self.wait_for_next()
 
         y_axis_label = Tex("e", font_size=36)
         y_axis_label.next_to(axes.get_left(), LEFT)
         y_axis_label.set_color(GREY_B)
         self.play(FadeIn(y_axis_label))
-        self.wait(1)
+        self.wait_for_next()
+
+        # Rename to model complexity
+        old_x_label = x_axis_label.copy()
+        new_x_label = Text("Model Complexity", font_size=24)
+        new_x_label.move_to(x_axis_label)
+        new_x_label.set_color(new_x_label.get_color())
+        self.play(Transform(x_axis_label, new_x_label))
+        self.wait_for_next()
+
+        # Rename back
+        self.play(Transform(new_x_label, old_x_label))
+        self.wait_for_next()
 
         train_err_bezier = bezier([0.4, 0.1, 0.05])
         train_err_fn = lambda x: train_err_bezier((x-1)/.9 / x_max)
@@ -84,7 +118,7 @@ class ValPoints(InteractiveScene):
             ShowCreation(train_err_graph),
             FadeIn(train_label, RIGHT),
         )
-        self.wait(1)
+        self.wait_for_next()
 
         test_err_bezier = bezier([0.45, 0.2, 0.4])
         val_err_fn = lambda x: test_err_bezier((x-1)/.9 / x_max)
@@ -101,7 +135,7 @@ class ValPoints(InteractiveScene):
             ShowCreation(val_err_graph),
             FadeIn(val_label, RIGHT),
         )
-        self.wait(1)
+        self.wait_for_next()
 
         # Show overfitting and underfitting
         over_under_line = DashedLine(
@@ -109,7 +143,7 @@ class ValPoints(InteractiveScene):
             axes.coords_to_point(x_max / 2, -y_max * 0))
         self.play(ShowCreation(over_under_line))
 
-        self.wait(1)
+        self.wait_for_next()
 
         # Show error arrows for overfitting
         arrow_x = x_max * 0.8
@@ -148,7 +182,7 @@ class ValPoints(InteractiveScene):
         underfitting_label.next_to(axes.coords_to_point(arrow_x * 1.1, label_y), RIGHT)
         underfitting_label.shift(0.8 * DOWN)
         self.play(FadeIn(underfitting_label))
-        self.wait(1)
+        self.wait_for_next()
 
         # Hide overfitting and underfitting and training error
         self.play(FadeOut(VGroup(
@@ -158,7 +192,7 @@ class ValPoints(InteractiveScene):
             overfitting_arrows,
             underfitting_arrows,
         )))
-        self.wait(1)
+        self.wait_for_next()
 
         # Animate a minimum-finding point
         roll_x = lambda alpha: math.cos(alpha * PI * 3) * 2.5 * math.pow(1-alpha, 1.2) + 5.5
@@ -178,14 +212,14 @@ class ValPoints(InteractiveScene):
                 y = val_err_fn(x)
                 self.mobject.move_to(axes.coords_to_point(x, y))
         self.play(RollAnimation(min_point), run_time=4, rate_func=linear)
-        self.wait(1)
+        self.wait_for_next()
 
         # Fade out the minimum point
         self.play(FadeOut(min_point))
 
         # Fade out training error plot
         self.play(FadeOut(VGroup(train_err_graph, train_label)))
-        self.wait(1)
+        self.wait_for_next()
 
         # Show validation samples
         points = VGroup()
@@ -199,11 +233,11 @@ class ValPoints(InteractiveScene):
             points.add(point)
 
         self.play(ShowCreation(points), run_time=3)
-        self.wait(1)
+        self.wait_for_next()
 
         # Semi-hide validation error graph
         self.play(ApplyMethod(val_err_graph.set_stroke, {'opacity': 0.2}))
-        self.wait(1)
+        self.wait_for_next()
 
         # Highlight an individual point
         point = points[0]
@@ -214,7 +248,7 @@ class ValPoints(InteractiveScene):
             ShowCreation(highlight_rect),
             points[1:].animate.set_opacity(0.2),
         )
-        self.wait(1)
+        self.wait_for_next()
 
         # Fade out the rect
         self.play(
@@ -231,7 +265,7 @@ class ValPoints(InteractiveScene):
         model_label.shift(0.3 * UP)
 
         self.play(ShowCreation(VGroup(model, model_label)))
-        self.wait(1)
+        self.wait_for_next()
 
         # Dashed line from point to value on x-axis
         hp_value = 4
@@ -266,7 +300,7 @@ class ValPoints(InteractiveScene):
         hp_value_label.set_color(RED_C)
 
         self.play(FadeIn(hp_label))
-        self.wait(1)
+        self.wait_for_next()
 
         # Show training data
         def show_training(model):
@@ -300,7 +334,7 @@ class ValPoints(InteractiveScene):
             color=WHITE,
         )
         self.play(FadeIn(VGroup(arrow_val, val_data_label)))
-        self.wait(1)
+        self.wait_for_next()
 
 
         # Show the prediction arrow and label
@@ -316,7 +350,7 @@ class ValPoints(InteractiveScene):
             color=WHITE,
         )
         self.play(FadeIn(VGroup(arrow_pred, predictions_label)))
-        self.wait(1)
+        self.wait_for_next()
 
 
 
@@ -338,18 +372,18 @@ class ValPoints(InteractiveScene):
         error_highlight.move_to(error_value)
         error_highlight.set_fill(BLACK)
         self.play(ShowCreation(error_highlight))
-        self.wait(1)
+        self.wait_for_next()
 
         # Move the error value to it's value position
         error_value_group = VGroup(error_value.copy(), error_highlight)
         self.play(error_value_group.animate.move_to(
             axes.coords_to_point(-0.5, 0)
         ))
-        self.wait(1)
+        self.wait_for_next()
         self.play(error_value_group.animate.move_to(
             axes.coords_to_point(-0.5, val_err_fn(hp_value))
         ))
-        self.wait(1)
+        self.wait_for_next()
 
         # Dashed line from error value to x-axis
         y_line = DashedLine(
@@ -361,21 +395,21 @@ class ValPoints(InteractiveScene):
             ShowCreation(x_line),
         )
         self.play(point.animate.set_opacity(1))
-        self.wait(1)
+        self.wait_for_next()
 
         # Fade out the labels
         self.play(
             FadeOut(y_line),
             FadeOut(x_line),
         )
-        self.wait(1)
+        self.wait_for_next()
 
         # Remove specific point highlights
         self.play(FadeOut(VGroup(
             error_value_group,
         )))
         hp_value_axis_number.set_color(WHITE)
-        self.wait(1)
+        self.wait_for_next()
 
         # Update HP value
         hp_value = 6
@@ -399,7 +433,7 @@ class ValPoints(InteractiveScene):
         next_error_label.move_to(error_label)
         next_error_label[error].set_color(BLUE_C)
         self.play(TransformMatchingTex(error_label, next_error_label), run_time=0.5)
-        self.wait(1)
+        self.wait_for_next()
 
         # Move coordinates
         coordinates = VGroup(
@@ -440,7 +474,7 @@ class ValPoints(InteractiveScene):
         next_error_label.move_to(error_label)
         next_error_label[error].set_color(BLUE_C)
         self.play(TransformMatchingTex(error_label, next_error_label), run_time=0.5)
-        self.wait(1)
+        self.wait_for_next()
 
         # Move coordinates again
         coordinates = VGroup(
@@ -456,7 +490,7 @@ class ValPoints(InteractiveScene):
             ApplyMethod(coordinates[1].set_opacity, 0),
             points[2].animate.set_opacity(1),
         )
-        self.wait(1)
+        self.wait_for_next()
         hp_label = next_hp_label
         error_label = next_error_label
 
@@ -472,11 +506,11 @@ class ValPoints(InteractiveScene):
             error_label,
             hp_value_highlight,
         )))
-        self.wait(1)
+        self.wait_for_next()
 
         # Highlight the minimum point
         highlight_rect.move_to(points[1])
         self.play(ShowCreation(highlight_rect))
-        self.wait(1)
+        self.wait_for_next()
 
         self.embed()

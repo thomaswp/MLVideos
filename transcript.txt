@@ -1,0 +1,91 @@
+# Construct X-Y axes
+Consider the following graph
+
+# Show labels
+On the x-axis we have some hyperparameter's value, maybe it's the maximum depth of a decision tree.
+And on the y-axis we have the error, maybe RMSE or classification error
+
+# Rename to model complexity
+And what hyperparameters typically control is the model complexity, so let's assume that this hyperparameter gets more complex as it goes up.
+
+# Rename back
+So higher values mean more complexity.
+
+# Show training error
+What that means is that as we increase the hyperparameter, we're going to see training error go down.
+
+# Show validation error
+But, what we really care about is not the training error -- how the model performs on data it's already seen -- but validation error -- how it performs on unseen data, and this curve will look different.
+
+# Show overfitting and underfitting
+In particular, we talk about two scenarios.
+
+# Show error arrows for overfitting
+When the model's complexity is too high, it will learn its training data really well, so it will have lower training error, but it overfits to those patters in the training data, and so it performs worse on unseen validation data.
+
+# Show label for overfitting
+We call that overfitting.
+
+# Show error arrows for underfitting
+On the otherhand, if the model is not complex enough, it won't even perform well on the training data, and so of course it also performs poorly on the validation data.
+
+# Show label for underfitting
+We call that underfitting.
+
+# Hide overfitting and underfitting and training error
+Our goal is to find the sweet spot between these two.
+
+# Animate a minimum-finding point
+That means finding the hyperparameter value that minimizes our validation error, or at least gets close to minimizing it.
+
+# Fade out the minimum point
+But how do we actually find that best hyperparameter value?
+
+# Fade out training error plot
+To do so, we really don't care about the training error - we can ignore it and focus on the validation error.
+
+# Show validation samples
+In reality, when we're tuning our hyperparameters, we can only test a discrete number of hyperparameter values, each with a corresponding validation error.
+
+# Semi-hide validation error graph
+So, we don't get a beautiful smooth curve, just a few specific points.
+
+# Highlight an individual point
+As a reminder, each one of these points has to be individually computed
+
+# Fade out the rect
+# Show the model creation
+by training and testing our model, which can take a while.
+
+# Dashed line from point to value on x-axis
+First we choose a hyperparameter value
+
+# Highlight the value on the x-axis
+which corresponds to a value on our x-axis.
+
+# Show the model hyperparameter
+And we fix that hyperparameter value before training our model.
+
+# Show training data
+# Show the input data label
+We then train our model with the hyperparameter value.
+
+# Arrow from training data to model
+
+# Show the prediction arrow and label
+
+# Arrow from training data to model
+# Error label
+# Highlight the error value
+# Move the error value to it's value position
+# Dashed line from error value to x-axis
+# Fade out the labels
+# Remove specific point highlights
+# Update HP value
+# Update error value
+# Move coordinates
+# Update HP value again
+# Update error value again
+# Move coordinates again
+# Fade out most things
+# Highlight the minimum point
