@@ -1,7 +1,6 @@
 from manimlib import *
 
-
-class GraphExample(InteractiveScene):
+class SelectingPoints(InteractiveScene):
     def construct(self):
 
         x_max = 10
@@ -17,6 +16,57 @@ class GraphExample(InteractiveScene):
         axes.add_coordinate_labels()
 
         self.play(Write(axes, lag_ratio=0.01, run_time=1))
+
+        # Show training error
+        self.play(
+            ShowCreation(train_err_graph),
+            FadeIn(train_label, RIGHT),
+        )
+        self.wait(1)
+
+        test_err_bezier = bezier([0.45, 0.2, 0.4])
+        val_err_fn = lambda x: test_err_bezier((x-1)/.9 / x_max)
+
+        val_err_graph = axes.get_graph(
+            val_err_fn,
+            x_range=(1, 10),
+            color=YELLOW,
+        )
+
+        self.play(
+            ShowCreation(val_err_graph),
+        )
+        self.wait(1)
+
+class ValPoints(InteractiveScene):
+    def construct(self):
+
+        x_max = 10
+        y_max = 0.5
+
+        axes = Axes((0, x_max), (0, y_max, 0.1), dict(), dict(), {
+            'unit_size': x_max / y_max * 0.5,
+            'decimal_number_config': dict(
+                num_decimal_places=1,
+                font_size=36,
+            )
+        })
+        axes.add_coordinate_labels()
+
+        self.play(Write(axes, lag_ratio=0.01, run_time=1))
+
+        # Show labels
+        x_axis_label = Text("Hyperparameter Value", font_size=24)
+        x_axis_label.next_to(axes.get_bottom(), DOWN)
+        x_axis_label.set_color(GREY_B)
+        self.play(FadeIn(x_axis_label))
+        self.wait(1)
+
+        y_axis_label = Tex("e", font_size=36)
+        y_axis_label.next_to(axes.get_left(), LEFT)
+        y_axis_label.set_color(GREY_B)
+        self.play(FadeIn(y_axis_label))
+        self.wait(1)
 
         train_err_bezier = bezier([0.4, 0.1, 0.05])
         train_err_fn = lambda x: train_err_bezier((x-1)/.9 / x_max)
@@ -55,8 +105,8 @@ class GraphExample(InteractiveScene):
 
         # Show overfitting and underfitting
         over_under_line = DashedLine(
-            axes.coords_to_point(x_max / 2, -y_max * 0.2),
-            axes.coords_to_point(x_max / 2, y_max * 1.2))
+            axes.coords_to_point(x_max / 2, y_max * 1),
+            axes.coords_to_point(x_max / 2, -y_max * 0))
         self.play(ShowCreation(over_under_line))
 
         self.wait(1)
@@ -110,6 +160,30 @@ class GraphExample(InteractiveScene):
         )))
         self.wait(1)
 
+        # Animate a minimum-finding point
+        roll_x = lambda alpha: math.cos(alpha * PI * 3) * 2.5 * math.pow(1-alpha, 1.2) + 5.5
+        min_point = Dot()
+        min_point.move_to(axes.coords_to_point(roll_x(0), val_err_fn(roll_x(0))))
+        min_point.set_fill(YELLOW_E)
+        min_point.set_stroke(GREY, 1)
+        self.play(FadeIn(min_point))
+
+        class RollAnimation(Animation):
+            def __init__(self, point: Dot, **kwargs) -> None:
+                # Pass number as the mobject of the animation
+                super().__init__(point,  **kwargs)
+
+            def interpolate_mobject(self, alpha: float) -> None:
+                x = roll_x(alpha)
+                y = val_err_fn(x)
+                self.mobject.move_to(axes.coords_to_point(x, y))
+        self.play(RollAnimation(min_point), run_time=4, rate_func=linear)
+        self.wait(1)
+
+        # Fade out the minimum point
+        self.play(FadeOut(min_point))
+
+        # Fade out training error plot
         self.play(FadeOut(VGroup(train_err_graph, train_label)))
         self.wait(1)
 
@@ -196,7 +270,7 @@ class GraphExample(InteractiveScene):
 
         # Show training data
         def show_training(model):
-            training_data = Tex("(\mathbf{X}_{train}, \mathbf{y}_{train})", font_size=28, color=WHITE)
+            training_data = Tex("(X_{train}, y_{train})", font_size=28, color=WHITE)
             training_data.next_to(model, UP)
             training_data.shift(0.5 * UP)
             training_arrow = Arrow(
@@ -214,41 +288,41 @@ class GraphExample(InteractiveScene):
         show_training(model)
 
         # Show the input data label
-        val_data_label = Tex("\mathbf{X}_{val}", font_size=28, color=WHITE)
+        val_data_label = Tex("X_{val}", font_size=28, color=WHITE)
         val_data_label.next_to(model, LEFT)
         val_data_label.shift(0.8 * LEFT)
         val_data_label.set_color_by_tex_to_color_map(tex_color_map)
 
         # Arrow from training data to model
-        arrow = Arrow(
+        arrow_val = Arrow(
             val_data_label.get_right(),
             model.get_left(),
             color=WHITE,
         )
-        self.play(FadeIn(VGroup(arrow, val_data_label)))
+        self.play(FadeIn(VGroup(arrow_val, val_data_label)))
         self.wait(1)
 
 
         # Show the prediction arrow and label
-        predictions_label = Tex("\mathbf{y}'_{val}", font_size=28, color=WHITE)
+        predictions_label = Tex("y'_{val}", font_size=28, color=WHITE)
         predictions_label.next_to(model, RIGHT)
         predictions_label.shift(0.8 * RIGHT)
         predictions_label.set_color_by_tex_to_color_map(tex_color_map)
 
         # Arrow from training data to model
-        arrow = Arrow(
+        arrow_pred = Arrow(
             model.get_right(),
             predictions_label.get_left(),
             color=WHITE,
         )
-        self.play(FadeIn(VGroup(arrow, predictions_label)))
+        self.play(FadeIn(VGroup(arrow_pred, predictions_label)))
         self.wait(1)
 
 
 
         # Error label
         error = f"{val_err_fn(hp_value):.2f}"
-        error_label = Tex("E(\mathbf{y}_{val}, \mathbf{y}'_{val}) = " + error, font_size=28, color=WHITE)
+        error_label = Tex("E(y_{val}, y'_{val}) = " + error, font_size=28, color=WHITE)
         error_label.move_to(axes.coords_to_point(x_max * 0.7, y_max * 0.3))
         error_label.set_color_by_tex_to_color_map(tex_color_map)
         error_value = error_label[error]
@@ -320,11 +394,12 @@ class GraphExample(InteractiveScene):
 
         # Update error value
         error = f"{val_err_fn(hp_value):.2f}"
-        next_error_label = Tex("E(\mathbf{y}_{val}, \mathbf{y}'_{val}) = " + error, font_size=28, color=WHITE)
+        next_error_label = Tex("E(y_{val}, y'_{val}) = " + error, font_size=28, color=WHITE)
         next_error_label.set_color_by_tex_to_color_map(tex_color_map)
         next_error_label.move_to(error_label)
         next_error_label[error].set_color(BLUE_C)
         self.play(TransformMatchingTex(error_label, next_error_label), run_time=0.5)
+        self.wait(1)
 
         # Move coordinates
         coordinates = VGroup(
@@ -360,11 +435,12 @@ class GraphExample(InteractiveScene):
 
         # Update error value again
         error = f"{val_err_fn(hp_value):.2f}"
-        next_error_label = Tex("E(\mathbf{y}_{val}, \mathbf{y}'_{val}) = " + error, font_size=28, color=WHITE)
+        next_error_label = Tex("E(y_{val}, y'_{val}) = " + error, font_size=28, color=WHITE)
         next_error_label.set_color_by_tex_to_color_map(tex_color_map)
         next_error_label.move_to(error_label)
         next_error_label[error].set_color(BLUE_C)
         self.play(TransformMatchingTex(error_label, next_error_label), run_time=0.5)
+        self.wait(1)
 
         # Move coordinates again
         coordinates = VGroup(
@@ -380,5 +456,27 @@ class GraphExample(InteractiveScene):
             ApplyMethod(coordinates[1].set_opacity, 0),
             points[2].animate.set_opacity(1),
         )
+        self.wait(1)
+        hp_label = next_hp_label
+        error_label = next_error_label
+
+        # Fade out most things
+        self.play(FadeOut(VGroup(
+            model,
+            model_label,
+            hp_label,
+            val_data_label,
+            arrow_val,
+            arrow_pred,
+            predictions_label,
+            error_label,
+            hp_value_highlight,
+        )))
+        self.wait(1)
+
+        # Highlight the minimum point
+        highlight_rect.move_to(points[1])
+        self.play(ShowCreation(highlight_rect))
+        self.wait(1)
 
         self.embed()
