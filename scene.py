@@ -26,7 +26,7 @@ class GraphExample(InteractiveScene):
             x_range=(1, 10),
             color=BLUE,
         )
-        
+
         train_label = axes.get_graph_label(train_err_graph, "e_{train}")
 
         # Show training error
@@ -44,7 +44,7 @@ class GraphExample(InteractiveScene):
             x_range=(1, 10),
             color=YELLOW,
         )
-        
+
         # Show validation error
         val_label = axes.get_graph_label(val_err_graph, "e_{val}")
         self.play(
@@ -55,7 +55,7 @@ class GraphExample(InteractiveScene):
 
         # Show overfitting and underfitting
         over_under_line = DashedLine(
-            axes.coords_to_point(x_max / 2, -y_max * 0.2), 
+            axes.coords_to_point(x_max / 2, -y_max * 0.2),
             axes.coords_to_point(x_max / 2, y_max * 1.2))
         self.play(ShowCreation(over_under_line))
 
@@ -64,7 +64,7 @@ class GraphExample(InteractiveScene):
         # Show error arrows for overfitting
         arrow_x = x_max * 0.8
         arrow_start_y = \
-            (train_err_fn(arrow_x) + 
+            (train_err_fn(arrow_x) +
             val_err_fn(arrow_x)) / 2
         overfitting_arrows = VGroup (Arrow(
             axes.coords_to_point(arrow_x, arrow_start_y),
@@ -96,13 +96,14 @@ class GraphExample(InteractiveScene):
         # Show label for underfitting
         underfitting_label = Text("Underfitting", color=RED_D, font_size=36)
         underfitting_label.next_to(axes.coords_to_point(arrow_x * 1.1, label_y), RIGHT)
+        underfitting_label.shift(0.8 * DOWN)
         self.play(FadeIn(underfitting_label))
         self.wait(1)
 
         # Hide overfitting and underfitting and training error
         self.play(FadeOut(VGroup(
-            over_under_line, 
-            overfitting_label, 
+            over_under_line,
+            overfitting_label,
             underfitting_label,
             overfitting_arrows,
             underfitting_arrows,
@@ -162,7 +163,7 @@ class GraphExample(InteractiveScene):
         hp_value = 4
         x_line = DashedLine(
             axes.coords_to_point(hp_value, 0),
-            highlight_rect.get_bottom(),
+            point.get_bottom(),
             color=WHITE,
         )
 
@@ -179,6 +180,7 @@ class GraphExample(InteractiveScene):
             # 'X': TEAL,
             # 'y': TEAL,
             'val': GREY_B,
+            'train': GREY_B,
         }
 
         # Show the model hyperparameter
@@ -192,24 +194,43 @@ class GraphExample(InteractiveScene):
         self.play(FadeIn(hp_label))
         self.wait(1)
 
+        # Show training data
+        def show_training(model):
+            training_data = Tex("(\mathbf{X}_{train}, \mathbf{y}_{train})", font_size=28, color=WHITE)
+            training_data.next_to(model, UP)
+            training_data.shift(0.5 * UP)
+            training_arrow = Arrow(
+                training_data.get_bottom(),
+                model.get_top(),
+                color=WHITE,
+            )
+
+            self.play(FadeIn(VGroup(training_data, training_arrow)))
+            self.play(
+                VGroup(training_data, training_arrow).animate.move_to(model).set_width(0, False),
+                model.animate.set_fill(GREEN_E, opacity=0.3),
+            )
+            self.play(model.animate.set_fill(opacity=0), run_time=0.5)
+        show_training(model)
+
         # Show the input data label
-        training_data_label = Tex("X_{val}", font_size=28, color=WHITE)
-        training_data_label.next_to(model, LEFT)
-        training_data_label.shift(0.8 * LEFT)
-        training_data_label.set_color_by_tex_to_color_map(tex_color_map)
+        val_data_label = Tex("\mathbf{X}_{val}", font_size=28, color=WHITE)
+        val_data_label.next_to(model, LEFT)
+        val_data_label.shift(0.8 * LEFT)
+        val_data_label.set_color_by_tex_to_color_map(tex_color_map)
 
         # Arrow from training data to model
         arrow = Arrow(
-            training_data_label.get_right(),
+            val_data_label.get_right(),
             model.get_left(),
             color=WHITE,
         )
-        self.play(FadeIn(VGroup(arrow, training_data_label)))
+        self.play(FadeIn(VGroup(arrow, val_data_label)))
         self.wait(1)
 
 
         # Show the prediction arrow and label
-        predictions_label = Tex("y'_{val}", font_size=28, color=WHITE)
+        predictions_label = Tex("\mathbf{y}'_{val}", font_size=28, color=WHITE)
         predictions_label.next_to(model, RIGHT)
         predictions_label.shift(0.8 * RIGHT)
         predictions_label.set_color_by_tex_to_color_map(tex_color_map)
@@ -227,7 +248,7 @@ class GraphExample(InteractiveScene):
 
         # Error label
         error = f"{val_err_fn(hp_value):.2f}"
-        error_label = Tex("E(y_{val}, y'_{val}) = " + error, font_size=28, color=WHITE)
+        error_label = Tex("E(\mathbf{y}_{val}, \mathbf{y}'_{val}) = " + error, font_size=28, color=WHITE)
         error_label.move_to(axes.coords_to_point(x_max * 0.7, y_max * 0.3))
         error_label.set_color_by_tex_to_color_map(tex_color_map)
         error_value = error_label[error]
@@ -259,7 +280,7 @@ class GraphExample(InteractiveScene):
         # Dashed line from error value to x-axis
         y_line = DashedLine(
             axes.coords_to_point(0, val_err_fn(hp_value)),
-            highlight_rect.get_left(),
+            point.get_left(),
         )
         self.play(
             ShowCreation(y_line),
@@ -281,24 +302,29 @@ class GraphExample(InteractiveScene):
         )))
         hp_value_axis_number.set_color(WHITE)
         self.wait(1)
-        
+
         # Update HP value
         hp_value = 6
         next_hp_label = Tex(f"k = {hp_value}", font_size=24)
         next_hp_label.move_to(hp_label)
         next_hp_label[f"{hp_value}"].set_color(RED_C)
         self.play(
-            TransformMatchingTex(hp_label, next_hp_label),
             hp_value_highlight.animate.move_to(axes.get_axes()[0].numbers[hp_value - 1]),
         )
+        self.play(
+            TransformMatchingTex(hp_label, next_hp_label),
+            run_time=0.5,
+        )
+
+        show_training(model)
 
         # Update error value
         error = f"{val_err_fn(hp_value):.2f}"
-        next_error_label = Tex("E(y_{val}, y'_{val}) = " + error, font_size=28, color=WHITE)
+        next_error_label = Tex("E(\mathbf{y}_{val}, \mathbf{y}'_{val}) = " + error, font_size=28, color=WHITE)
         next_error_label.set_color_by_tex_to_color_map(tex_color_map)
         next_error_label.move_to(error_label)
         next_error_label[error].set_color(BLUE_C)
-        self.play(TransformMatchingTex(error_label, next_error_label))
+        self.play(TransformMatchingTex(error_label, next_error_label), run_time=0.5)
 
         # Move coordinates
         coordinates = VGroup(
@@ -323,17 +349,22 @@ class GraphExample(InteractiveScene):
         next_hp_label.move_to(hp_label)
         next_hp_label[f"{hp_value}"].set_color(RED_C)
         self.play(
-            TransformMatchingTex(hp_label, next_hp_label),
             hp_value_highlight.animate.move_to(axes.get_axes()[0].numbers[hp_value - 1]),
         )
+        self.play(
+            TransformMatchingTex(hp_label, next_hp_label),
+            run_time=0.5,
+        )
+
+        show_training(model)
 
         # Update error value again
         error = f"{val_err_fn(hp_value):.2f}"
-        next_error_label = Tex("E(y_{val}, y'_{val}) = " + error, font_size=28, color=WHITE)
+        next_error_label = Tex("E(\mathbf{y}_{val}, \mathbf{y}'_{val}) = " + error, font_size=28, color=WHITE)
         next_error_label.set_color_by_tex_to_color_map(tex_color_map)
         next_error_label.move_to(error_label)
         next_error_label[error].set_color(BLUE_C)
-        self.play(TransformMatchingTex(error_label, next_error_label))
+        self.play(TransformMatchingTex(error_label, next_error_label), run_time=0.5)
 
         # Move coordinates again
         coordinates = VGroup(
