@@ -327,7 +327,7 @@ class ValPoints(InteractiveScene):
         val_data_label.shift(0.8 * LEFT)
         val_data_label.set_color_by_tex_to_color_map(tex_color_map)
 
-        # Arrow from training data to model
+        # Arrow from validation data to model
         arrow_val = Arrow(
             val_data_label.get_right(),
             model.get_left(),
@@ -343,7 +343,7 @@ class ValPoints(InteractiveScene):
         predictions_label.shift(0.8 * RIGHT)
         predictions_label.set_color_by_tex_to_color_map(tex_color_map)
 
-        # Arrow from training data to model
+        # Arrow from model to predictions
         arrow_pred = Arrow(
             model.get_right(),
             predictions_label.get_left(),

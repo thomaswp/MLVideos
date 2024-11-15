@@ -68,24 +68,49 @@ And we fix that hyperparameter value before training our model.
 
 # Show training data
 # Show the input data label
-We then train our model with the hyperparameter value.
+We then set the hyperparameter value to 4, and train our model with training data, which includes features (X) and labels (y).
+The hyperparameter -- let's say the maximum depth of a decision tree -- is fixed throughout the training process.
 
-# Arrow from training data to model
+# Arrow from validation data to model
+Once the model is trained, we evaluate its performance using the validation dataset, which it hasn't seen before. We ask the model to make predictions based on the features, X, of the validation dataset.
 
 # Show the prediction arrow and label
+# Arrow from model to predictions
+And it makes predictions, y'.
 
-# Arrow from training data to model
 # Error label
+We can then calculate the model's validation error when trained with that hyperparameter.
+
 # Highlight the error value
 # Move the error value to it's value position
+That error value corresponds to the y-axis of our chart here.
+
 # Dashed line from error value to x-axis
+So to define a point in our validation error curve, we take the hyperparameter value as the x-value, in this case 4, and the error value as the y-value, in this case 0.33.
+
 # Fade out the labels
 # Remove specific point highlights
+Remember out goal is to find the hyperparameter value that produces the lowest validation error, or error on unseen data. To do that, we have to try a few more values.
+
 # Update HP value
+For example, we might try setting the hyperparameter to 6. Remember, we have to retrain our model with the training data, since changing the hyperparameter creates a different model. If we're increasing the maximum depth of a decision tree, we would get a bigger, more complex decision tree.
+
 # Update error value
+We then reevaluate the model using the validation data to calculate an updated validation error; in this case 0.31.
+
 # Move coordinates
+Together, these values, 6 and 0.31, form another point on our validation error curve.
+
 # Update HP value again
+We might then try another value, say 8, and retrain our model with a hyperparameter value of 8.
+
 # Update error value again
+# This gives us a new validation error, 0.33.
+
 # Move coordinates again
+Which defines a new point in our validation curve.
+
 # Fade out most things
 # Highlight the minimum point
+In the end, we take the hyperparameter value that produced the lowest error, in this case 6.
+Note that this may not be the absolute lowest possible validation error, since we didn't test every possible point. So the choice of points we sample is important.
