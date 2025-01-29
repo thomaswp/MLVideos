@@ -38,7 +38,7 @@ class SelectingPoints(InteractiveScene):
             ShowCreation(val_err_graph),
         )
         self.wait(1)
-    
+
 
 class ValPoints(InteractiveScene):
 
@@ -46,7 +46,7 @@ class ValPoints(InteractiveScene):
         if button == 1:
             self.go_to_next = True
         return super().on_mouse_press(point, button, mods)
-    
+
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == 32: # space
             self.go_to_next = True
@@ -90,17 +90,13 @@ class ValPoints(InteractiveScene):
         self.play(FadeIn(y_axis_label))
         self.wait_for_next()
 
-        # Rename to model complexity
-        old_x_label = x_axis_label.copy()
-        new_x_label = Text("Model Complexity", font_size=24)
-        new_x_label.move_to(x_axis_label)
-        new_x_label.set_color(new_x_label.get_color())
-        self.play(Transform(x_axis_label, new_x_label))
+        # Add model complexity
+        added_label = Text("(Model Complexity)", font_size=24)
+        added_label.next_to(x_axis_label, DOWN)
+        added_label.set_color(x_axis_label.get_color())
+        self.play(FadeIn(added_label))
         self.wait_for_next()
 
-        # Rename back
-        self.play(Transform(new_x_label, old_x_label))
-        self.wait_for_next()
 
         train_err_bezier = bezier([0.4, 0.1, 0.05])
         train_err_fn = lambda x: train_err_bezier((x-1)/.9 / x_max)
